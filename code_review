@@ -1,0 +1,54 @@
+# prejmenovat skript na create_time_chart.py
+
+# parametry nacitat z prikazove radky pres sys.argc, sys.argv (import sys)
+# zkontrolovat spravny pocet parametru: sys.argc == 4 (nazev programu + 3 parametry)
+# parametry: input_file.csv output_file.csv minutes (sys.argv[1], sys.argv[2], sys.argv[3])
+
+# pro jednoduchost nazev souboru nesestavovat, ale pouzit ten poskytnuty z prikazove radky
+# bylo by do slozitejsi, dodrzet konvence pro cas jako m1, m5, m30, h1, d1, w1, atd.
+
+# kvuli jednotnosti pretypovat take open_value na float, jinak bude matouci, proc je neco string a neco float
+
+# neduplikovat kod: datetime.strptime(r[0], "%Y-%m-%d %H:%M:%S%z")
+
+# nejak upravit logiku, aby pretypovani nactenych hodnot na float probihalo jen na jednom miste, tedy neduplikovat kod:
+# high_value = float(r[2])
+# high_value = high_value if high_value > float(r[2]) else float(r[2])
+# spravne by mela byt vytvorena samostatna funkce, ktera resi nacteni souboru a vraci pole s pretypovanymi hodnotami.
+# pameti pocitace je dost, zpracovani nemusime resit streamove, tedy funkce muze nacist cely soubor do poli, a teprve
+# potom muze zacit zpracovani:
+# date, open, high, low, close = read_csv(input_file)
+
+# alternativni reseni - nainstalovat pandas: pip install pandas
+# soubor nacitat pres:
+# import pandas as pd
+# data = pd.read_csv(input_file)
+# parsovani datumu - viz parametr parse_dates u pd.read_csv
+# iterovani radku treba pres: data.iterrows()
+# analogicky alternativni moznost zapisu souboru pres pandas, vystupni dataframe vytvorit treba pres asociativni pole poli:
+# time_chart = pd.DataFrame.from_dict({'Date': output_date, 'Open': output_open, ...})
+# time_chart.to_csv(output_file)
+
+# kvuli jednotnosti, misto:
+# frame_delta = timedelta(minutes=frame - 1)
+# by bylo lepsi:
+# frame_delta = timedelta(minutes=frame)
+# a upravit logiku, jinak bude matouci, proc je nekde 5 a jinde 4
+
+# funkce min, max: high_value = max(high_value, float(r[2]))
+
+# nasledujici logika nebude fungovat, kdyz budou chybet nektere minuty na vstupu:
+# if delta < frame_delta:
+#    ...
+# elif delta == frame_delta:
+#    ...
+
+# na vystupu bychom pro jednoduchost dalsiho zpracovani chteli, aby byly pritomne hodnoty, i kdyz se v dany okamzik
+# vubec neobchodovalo, v takovem pripade vsechny hodnoty open, high, low, close nastavit na posledni close a volume na 0
+
+# tzn. na zacatku vzit prvni datetime, zaokrouhlit dolu na dany pocet minut
+# jednoduche reseni by mohlo byt vzit nacteny soubor, iterovat vsechny existujici minuty a vytvorit novy upraveny vstup,
+# kde chybejici minuty budou doplneny a hodnoty cen nastaveny na predesly close a volume na 0, nasledne vstup
+# zpracovat stejnym zpusobem jako doposud
+
+# CSV vystup nema obsahovat [, ] a mezery po carce

@@ -43,4 +43,6 @@ def get_frame(input_path, frame, output_dir):
                 start = True
 
 
+start = datetime.now()
 get_frame(file_path, 5, "/Users/denis/root/bohdan/output")
+print(datetime.now() - start)
