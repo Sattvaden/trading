@@ -45,22 +45,42 @@ def add_to_result(result, row):
     result.append(",".join(temp))
 
 
-def within_delta(current, start, delta):
-    return current - start < delta
+def fill_gap_if_necessary(result, row, frame):
+    if not result:
+        return result
+    last_row = result[-1].split(',')
+    last_row[5], last_row[6] = '0', '0'
+    last_time = get_time(last_row[0])
+    last_time += timedelta(minutes=frame)
+    while last_time < row[0]:
+        last_row[0] = parse_to_string(last_time)
+        result.append(",".join(last_row))
+        last_time += timedelta(minutes=frame)
+    return result
+
+
+def within_delta(current_time, open_time, delta):
+    return current_time - open_time < delta
+
+
+def round_time(dt_obj, frame):
+    m = dt_obj.minute - dt_obj.minute % frame
+    return dt_obj.replace(minute=m)
 
 
 def get_frame(input_file, frame):
     res = []
     data = get_data(input_file)
-    current_row = [data[0][0], data[1][0], data[2][0], data[3][0], data[4][0], data[5][0], data[6][0]]
+    row = [round_time(data[0][0], frame), data[1][0], data[2][0], data[3][0], data[4][0], data[5][0], data[6][0]]
     delta = timedelta(minutes=int(frame))
     for i in range(1, len(data[0])):
         row_i = [data[0][i], data[1][i], data[2][i], data[3][i], data[4][i], data[5][i], data[6][i]]
-        if within_delta(data[0][i], current_row[0], delta):
-            merge(current_row, row_i)
+        if within_delta(data[0][i], row[0], delta):
+            merge(row, row_i)
         else:
-            add_to_result(res, current_row)
-            current_row = row_i
+            add_to_result(fill_gap_if_necessary(res, row, frame), row)
+            row_i[0] = round_time(data[0][i], frame)
+            row = row_i
     return res
 
 
@@ -74,5 +94,5 @@ if len(argv) != 4:
     print("wrong number of arguments")
     exit()
 start = datetime.now()
-write_to_file(get_frame(input_file=argv[1], frame=argv[3]), to_file=argv[2])
+write_to_file(get_frame(input_file=argv[1], frame=int(argv[3])), to_file=argv[2])
 print(datetime.now() - start)
